@@ -19,8 +19,12 @@ jobs:
       - name: Copy .env
         run: php -r "file_exists('.env') || copy('.env.example', '.env');"
 
-      - run: |
+      - name: Install dependecies
+        run: |
           composer require --dev "laravel/framework:^9" --no-interaction --no-update
           composer update --prefer-dist --no-interaction
+
+      - name: Generate key
+        run: php artisan key:generate
 
       - run: vendor/bin/pest
