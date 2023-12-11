@@ -14,12 +14,12 @@ class JWTService
     {
         return JWT::encode([
             self::$field => $data
-        ], env("JWT_SECRET"), self::$method);
+        ], env("JWT_SECRET", "testkey"), self::$method);
     }
 
     public static function read(string $jwt)
     {
-        $jwt = JWT::decode($jwt, new Key(env("JWT_SECRET"), self::$method));
+        $jwt = JWT::decode($jwt, new Key(env("JWT_SECRET", "testkey"), self::$method));
         $field = self::$field;
 
         if (!isset($jwt->$field)) return null;
