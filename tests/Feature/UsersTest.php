@@ -75,6 +75,12 @@ it('Create a user (with repository)', function () {
     expect($user->check_password($this->user_data['password']))->toBeTrue();
 
     expect($user->id)->toBeString();
+
+    $this->userRepository->update($user, [
+        "nick" => faker()->name()
+    ]);
+
+    expect($user->nick === $this->user_data['nick'])->toBeFalse();
 });
 
 it('Set role in one user (with repository)', function () {
@@ -84,4 +90,8 @@ it('Set role in one user (with repository)', function () {
     $user->assignRole(Roles::ADMIN);
 
     expect($user->hasRole(Roles::ADMIN))->toBeTrue();
+
+    $all_admins = $this->userRepository->admins();
+
+    expect(count($all_admins))->toBe(1);
 });
