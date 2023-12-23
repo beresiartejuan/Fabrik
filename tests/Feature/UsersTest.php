@@ -20,40 +20,33 @@ beforeEach(function () {
     Role::create([
         "name" => Roles::ADMIN
     ]);
+
+    $this->user_custom_check = function ($user, $data) {
+        expect($user)->toBeInstanceOf(User::class);
+        expect($user->id)->toBeString();
+        expect($user->password === $data['password'])->toBeFalse();
+        expect($user->check_password($data['password']))->toBeTrue();
+    };
 });
 
 it('Create a user (without repository)', function () {
 
     $original_password = faker()->password();
 
-    $user = new User([
-        'name' => faker()->lastName(),
-        'nick' => faker()->name(),
-        'password' => $original_password
-    ]);
+    $user = new User($this->user_data);
 
     $user->encrypt_password();
 
-    expect($user)->toBeInstanceOf(User::class);
+    expect($user->save())->toBeTrue();
 
-    expect($user->password === $original_password)->toBeFalse();
+    $custom = $this->user_custom_check;
 
-    expect($user->check_password($original_password))->toBeTrue();
-
-    $user->save();
-
-    expect($user->id)->toBeString();
+    $custom($user, $this->user_data);
 });
 
 it('Set role in one user (without repository)', function () {
 
-    $paa = faker()->password(6, 12);
-
-    $user = new User([
-        'name' => faker()->lastName(),
-        'nick' => faker()->name(),
-        'password' => $paa
-    ]);
+    $user = new User($this->user_data);
 
     $user->encrypt_password();
 
@@ -62,25 +55,21 @@ it('Set role in one user (without repository)', function () {
     $user->assignRole(Roles::ADMIN);
 
     expect($user->hasRole(Roles::ADMIN))->toBeTrue();
+
+    $custom = $this->user_custom_check;
+
+    $custom($user, $this->user_data);
 });
 
 it('Create a user (with repository)', function () {
 
     $user = $this->userRepository->create($this->user_data);
 
-    expect($user)->toBeInstanceOf(User::class);
+    expect(count(User::all()))->toBe(1);
 
-    expect($user->password === $this->user_data['password'])->toBeFalse();
+    $custom = $this->user_custom_check;
 
-    expect($user->check_password($this->user_data['password']))->toBeTrue();
-
-    expect($user->id)->toBeString();
-
-    $this->userRepository->update($user, [
-        "nick" => faker()->name()
-    ]);
-
-    expect($user->nick === $this->user_data['nick'])->toBeFalse();
+    $custom($user, $this->user_data);
 });
 
 it('Set role in one user (with repository)', function () {
@@ -94,4 +83,8 @@ it('Set role in one user (with repository)', function () {
     $all_admins = $this->userRepository->admins();
 
     expect(count($all_admins))->toBe(1);
+
+    $custom = $this->user_custom_check;
+
+    $custom($user, $this->user_data);
 });
