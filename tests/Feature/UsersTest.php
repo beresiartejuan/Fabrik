@@ -2,10 +2,11 @@
 
 use App\Models\User;
 use App\Repositories\UserRepository;
-use Spatie\Permission\Models\Role;
 use App\Roles;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use function Pest\Faker\faker;
+use function Pest\Laravel\post;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
@@ -14,11 +15,11 @@ beforeEach(function () {
     $this->user_data = [
         'name' => faker()->lastName(),
         'nick' => faker()->name(),
-        'password' => faker()->password()
+        'password' => faker()->password(),
     ];
 
     Role::create([
-        "name" => Roles::ADMIN
+        "name" => Roles::ADMIN,
     ]);
 
     $this->user_custom_check = function ($user, $data) {
@@ -87,4 +88,23 @@ it('Set role in one user (with repository)', function () {
     $custom = $this->user_custom_check;
 
     $custom($user, $this->user_data);
+});
+
+it('Authentication user', function () {
+
+    $user = $this->userRepository->create($this->user_data);
+
+    $user->assignRole(Roles::ADMIN);
+
+    $custom = $this->user_custom_check;
+
+    $custom($user, $this->user_data);
+
+    $res = post('/auth/login', [
+        "nick" => $this->user_data["nick"],
+        "password" => $this->user_data["password"],
+    ]);
+
+    $res->assertStatus(200);
+
 });
